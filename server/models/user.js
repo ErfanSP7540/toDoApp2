@@ -52,6 +52,37 @@ userSchema.statics.findByToken = function(token){
          
 }
 
+userSchema.statics.findByCredentials = function(email,password){
+ 
+        
+        if( email  &&  password ){
+          return this.findOne({email})
+                .then( doc=>{
+                    if(!doc){ return Promise.reject('incorect email') }
+                        
+                //     bcrypt.compare(password, doc.password, (err, resp)=> { 
+                //         if(err) { return Promise.reject('compaire failed') }
+                //         if(resp){ console.log("1",doc);return Promise.resolve(doc) }
+                //         else    { return Promise.reject('incorect passwoord')}
+                //     })
+
+                    return new Promise( (resolve,reject)=>{
+                        bcrypt.compare(password, doc.password, (err, resp)=> { 
+                                if(err) { reject('compaire failed') }
+                                if(resp){ console.log("1",doc);  resolve(doc) }
+                                else    { reject('incorect passwoord')}
+                        })                            
+                    })
+
+
+
+                })
+                .catch( ()=> Promise.reject('Finding Error') )
+        }
+        else{
+              return Promise.reject('incorect data');
+        }
+}
 
 userSchema.pre('save',function(next){
         var user = this;
