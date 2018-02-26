@@ -9,8 +9,19 @@ const jwt = require('jsonwebtoken');
 const express = require('express')
 const bodyParser = require('body-parser')
 const app = express();
+const {Authentication} = require('../server/middleware/Authentication')
 
 app.use(bodyParser.json());
+
+app.delete('/users/me/token',Authentication,(req,res)=>{
+                       
+console.log('serrrrveerrr' );
+
+        req.user
+        .removeToken(req.token)
+        .then ( ()=>{ res.status(200).send()  } ) 
+        .catch( ()=>{ res.status(404).send()  } )
+})
 
 
 //2
@@ -18,9 +29,9 @@ app.post('/users/login',(req,res)=>{
 
         var body = _.pick(req.body,['email','password'])
         userModel.findByCredentials(body.email,body.password)
-        .then(user=>{ 
-                user.generateAuthToken()
-                .then(token=>{ res.header('x_auth',token).send(_.pick(user,['email','password'])) })
+        .then(user=>{
+                 user.generateAuthToken()
+                 .then(token=>{ res.header('x_auth',token).send(_.pick(user,['email','password'])) })
         })
         .catch(e=>{ res.status(404).send(e) })
  })
@@ -64,7 +75,7 @@ app.post('/users/login',(req,res)=>{
 
 
 // 3
-const {Authentication} = require('../server/middleware/Authentication')
+
 app.post('/users/me',Authentication,(req,res)=>{
         
         res.send(JSON.stringify( _.pick(req.user,['email','password'])  ))

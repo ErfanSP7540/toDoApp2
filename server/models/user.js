@@ -69,7 +69,7 @@ userSchema.statics.findByCredentials = function(email,password){
                     return new Promise( (resolve,reject)=>{
                         bcrypt.compare(password, doc.password, (err, resp)=> { 
                                 if(err) { reject('compaire failed') }
-                                if(resp){ console.log("1",doc);  resolve(doc) }
+                                if(resp){ console.log("1", JSON.stringify(doc,undefined,2)   );  resolve(doc) }
                                 else    { reject('incorect passwoord')}
                         })                            
                     })
@@ -103,6 +103,20 @@ userSchema.pre('save',function(next){
         }else{ next();   }
 
 })
+
+
+userSchema.methods.removeToken = function(token){
+        console.log('removvvv tookeennnn' );
+
+        try {
+           return this.update({$pull:{ tokens:{ token:token } }})
+                      .then(  doc=>{ console.log(doc); new Promise( (resolve,rej)=>{ resolve() })  })
+                      .catch( err=>{ new Promise( (res,reject )=>{ reject () })  })
+        } 
+        catch (error) {
+                 return new Promise( (res,reject)=>{ reject() }) 
+        }
+}
 
 
 var userModel = mongoose.model('users',userSchema );
