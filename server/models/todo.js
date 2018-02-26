@@ -9,13 +9,17 @@ new mongoose.Schema({
                         minlength:1,
                     },
                     compelete:{
-                        type:Boolean
-                        ,default:false
+                        type:Boolean,
+                        default:false
                     },
                     compeletedAt:{
                          type:Number,
                          default:null
-                        }
+                        },
+                    _creator:{
+                        type:mongoose.Schema.Types.ObjectId,
+                        required:true
+                    }    
                     }));
 
 module.exports = { todoModel }

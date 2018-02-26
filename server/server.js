@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const bcrypt = require('bcryptjs');
 
+const {ObjectID} = require('mongodb')
 const {mongoose} = require('./db/mongoose')
 const {userModel} = require('./models/user')
 const {todoModel} = require('./models/todo')
@@ -13,10 +14,95 @@ const {Authentication} = require('../server/middleware/Authentication')
 
 app.use(bodyParser.json());
 
-app.delete('/users/me/token',Authentication,(req,res)=>{
-                       
-console.log('serrrrveerrr' );
+app.get('/todos/:id',Authentication , (req,res)=>{
 
+} )
+
+
+app.get('/todo/:id',Authentication,(req,res)=>{
+        if(! ObjectID.isValid(req.params.id) )
+        {
+                res.status(400).send('Id is not valid') 
+        }
+        todoModel.findOne({   _id  :new ObjectID(req.params.id),
+                        _creator:req.user._id    
+                       })
+        .then( doc=>{  
+                        if(doc){  res.status(200).send(doc)           }
+                        else   {  res.status(400).send('NOT Fpound')  }
+                    })
+        .catch( er=>{  res.status(400).send(er) } )
+                
+})
+
+app.delete('/todo/:id',Authentication,(req,res)=>{
+        if(! ObjectID.isValid(req.params.id) )
+        {
+                res.status(400).send('Id is not valid') 
+        }
+        todoModel.findOneAndRemove({   _id   :new ObjectID(req.params.id),
+                                    _creator :req.user._id    
+                                   })
+        .then( doc=>{  
+                        if(doc){  res.status(200).send(doc)           }
+                        else   {  res.status(400).send('NOT Fpound')  }
+                    })
+        .catch( er=>{  res.status(400).send(er) } )
+                
+})
+
+app.patch('/todo/:id',Authentication,(req,res)=>{
+        if(! ObjectID.isValid(req.params.id) )
+        {
+                res.status(400).send('Id is not valid') 
+        }
+        todoModel.findOneAndUpdate({   _id   :new ObjectID(req.params.id),
+                                    _creator :req.user._id    
+                                   } , 
+                                {
+                                        compelete:true,
+                                        compeletedAt: new Date().getTime()
+                                },{ new:true})
+        .then( doc=>{  
+                        if(doc){  res.status(200).send(doc)           }
+                        else   {  res.status(400).send('NOT Fpound')  }
+                    })
+        .catch( er=>{  res.status(400).send(er) } )
+                
+})
+
+// insert to db
+app.post('/todos',Authentication,(req,res)=>{
+        console.log(req.body);
+        var newDoc = _.pick(req.body,['text'])
+        newDoc._creator = req.user._id;
+        console.log(newDoc);
+        
+                if( newDoc.text ){
+                     var newTodo =  new todoModel(newDoc)
+                     newTodo.save()
+                     .then ( doc=>{ res.status(200).send()  })
+                     .catch( er=>{ res.status(400).send(er)   })
+                }
+                else{ res.status(400).send('bad input body') }
+                
+})
+
+app.get('/todos',Authentication,(req,res)=>{
+
+        todoModel.find({_creator:req.user._id})
+        .then( doc=>{
+                 if(doc.length>0){
+                       res.status(200).send(doc)
+                 }else{
+                       res.status(400).send('notFound')  
+                 }
+        })
+        .catch( er=>{ res.status(400).send('error db')  })
+                
+})
+
+app.delete('/users/me/token',Authentication,(req,res)=>{
         req.user
         .removeToken(req.token)
         .then ( ()=>{ res.status(200).send()  } ) 
@@ -212,7 +298,6 @@ app.post('/users',(req,res)=>{
             res.status(400).send('Incorrect Data')
             return console.log('Incorrect Data');
         }
- 
  })
 
 
